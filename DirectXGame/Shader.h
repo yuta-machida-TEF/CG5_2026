@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>//wstring, string
 #include<d3d12.h>//ID3DBlob
 
