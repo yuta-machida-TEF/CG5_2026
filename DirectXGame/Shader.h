@@ -3,7 +3,7 @@
 #include<d3d12.h>//ID3DBlob
 #include<d3dcompiler.h>//dxcapi.hが依存している
 #include<dxcapi.h>//IDxcBlobを利用するため
-
+//#pragma comment(lib, "dxcompiler.lib")
 
 class Shader {
 public:
