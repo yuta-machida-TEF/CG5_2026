@@ -2,13 +2,12 @@
 #include<d3dcompiler.h>//D3DCompileFromFile
 #include<cassert>//assert
 
-
 void Shader::Load(const std::wstring& filePath, const std::wstring& shaderModel) { 
 	ID3DBlob* shaderBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
 
 	//wsstring => string 文字列変換
-	std::string mbShaderModel = "vs_5_0";
+	std::string mbShaderModel = ConvertString(shaderModel);
 
 	HRESULT hr = D3DCompileFromFile(
 	    filePath.c_str(), // シェーダーファイル名
@@ -70,7 +69,7 @@ std::wstring& shaderModel)
 	shaderSouceBuffer.Encoding = DXC_CP_UTF8;
 
 	//2. Compileする
-	LPCUWSTR arguments[] = {
+	LPCWSTR arguments[] = {
 	    filePath.c_str(),//コンパイル対象のhlslファイル名
 		L"-E",
 		L"main",//エントリーポイントの指定。基本的にmain以外にはしない
