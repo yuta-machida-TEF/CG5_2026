@@ -56,6 +56,51 @@ void SetupPiPelineState(PipelineState& pipelineState, RootSignature& rs, Shader&
 	// 準備を整った。PSOを生成する
 	pipelineState.Create(graphicsPipelineStaticDesc);
 
+	//RenderTextrueResourceの生成
+	ID3D12Resource* CreateRenderTextureResource(ID3D12Device * device, uint32_t width, uint32_t height,
+	DXGI_FORMAT format, const FLOAT* clearColor);
+
+}
+
+// RenderTextureResourceの生成
+ID3D12Resource* CreateRenderTextureResource(ID3D12Device* device, uint32_t width, uint32_t height, DXGI_FORMAT clearFormat, const FLOAT* clearColor) {
+	// 1.生成するRederTextureの Descの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = UINT(width);                             // RenderTextureの幅
+	resourceDesc.Height = UINT(height);                           // RenderTextureの高さ
+	resourceDesc.MipLevels = 1;                                   // mipmapの数
+	resourceDesc.DepthOrArraySize = 1;                            // 奥行 or 配列Textureceの配列数
+	resourceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;        // TextureのFormat
+	resourceDesc.SampleDesc.Count = 1;                            // サンプリングカウント 1固定
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;  // Textrueの次元数。普通使っているのは 2次元
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET; // RenderTargetとして使う通知
+
+	// 2利用するHeapの設定
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT; // VRAM上に作る
+
+	// 3. ClaarValueの用意
+	D3D12_CLEAR_VALUE clearValue;
+	clearValue.Format = clearFormat;
+	clearValue.Color[0] = clearColor[0];
+	clearValue.Color[1]	= clearColor[1];
+	clearValue.Color[2]	= clearColor[2];
+	clearValue.Color[3]	= clearColor[3];
+
+	//4. RenderTextureResourceの生成
+	ID3D12Resource* resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+	    &heapProperties, // Heapの設定
+	    D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定
+		&resourceDesc,//Resourceの設定
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//Pixel Shader でアクセスできるようにする
+		&clearValue,//Clear最適値
+		IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
+	);
+
+	assert(SUCCEEDED(hr));
+
+	return resource;
 }
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -144,6 +189,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	{
 		pGpuIndices[i] = indices[i];
 	}
+
+	//Resource生成、Heap生成、View生成で再利用される変数の準備
+	ID3D12Device* device = dxCommon->GetInstance();
 
 	//メインループ
 	while (true)
