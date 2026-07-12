@@ -331,9 +331,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			break;
 		}
 
-		// 描画開始
-		dxCommon->PreDraw();
-
 		//描画(次回の00_10でやる)
 
 		//TranssitionBarrierをSRV->RTVに設定する
@@ -367,17 +364,30 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		commandList->OMSetRenderTargets(1, &rtvHandleCPU, false, &dsvHandleCPU);
 		commandList->RSSetViewports(1, &viewport);
 		commandList->RSSetScissorRects(1, &scissorRect);
+		
 		//全画面クリア
 		commandList->ClearRenderTargetView(rtvHandleCPU, kRenderTargetClearColor,0,nullptr);
 		//指定した深度で画面全体をクリアする
 		commandList->ClearDepthStencilView(dsvHandleCPU, D3D12_CLEAR_FLAG_DEPTH,1.0f,0,0,nullptr);
+
+
+		// 描画開始
+		dxCommon->PreDraw();
+		
 		//コマンドを積む
 		commandList->SetGraphicsRootSignature(rs.Get());//RootSignatureの設定
 		commandList->SetPipelineState(peipelineState.Get());//PSOの設定する
 		commandList->IASetVertexBuffers(0, 1, vb.GetView());//VBVの設定する
 		commandList->IASetIndexBuffer(ib.GetView());//IBVの設定する
-		//トポロジの設定
+		// トポロジの設定
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		//使用するディスクリプタヒープの設定
+		commandList->SetDescriptorHeaps(srvDescriptorHeap->GetDesc().NumDescriptors, &srvDescriptorHeap);
+
+		//SRVのDescripterTableの先頭を設定
+		commandList->SetGraphicsRootDescriptorTable(0, srvHandleGPU);
+		
 		//commandList->DrawInstanced(3, 1, 0, 0); //頂点数, インデックス数, インデックスの開始位置, インデックスのオフセット
 		commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0);
 
