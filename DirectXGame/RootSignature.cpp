@@ -20,6 +20,18 @@ void RootSignature::Create()
 	//構造体にデータを用意する
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	
+	//デスクリプタレンジ
+	D3D12_DESCRIPTOR_RANGE srvDescRange[1]{};
+	//t0 レジスタを利用可能にする
+	srvDescRange[0].BaseShaderRegister = 0;
+	srvDescRange[0].NumDescriptors = 1;
+	srvDescRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	srvDescRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	
+	//RootParameterの用意
+	//複数設定できるので配列
+	
 	ID3D10Blob* signatureBlob = nullptr;
 	ID3D10Blob* errorBlog = nullptr;
 	HRESULT hr = D3D12SerializeRootSignature(&descriptionRootSignature, 
