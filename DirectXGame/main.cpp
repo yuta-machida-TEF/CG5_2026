@@ -5,6 +5,7 @@
 #include"PipelineState.h"
 #include"VertexBuffer.h"
 #include"IndexBuffer.h"
+
 using namespace KamataEngine; 
 
 //関数プロとタイプ宣言
