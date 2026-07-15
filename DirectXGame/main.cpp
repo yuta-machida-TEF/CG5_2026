@@ -5,6 +5,7 @@
 #include"PipelineState.h"
 #include"VertexBuffer.h"
 #include"IndexBuffer.h"
+#include"WorldTransformEx.h"
 
 using namespace KamataEngine; 
 
@@ -181,6 +182,20 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	PipelineState peipelineState;
 	SetupPiPelineState(peipelineState, rs, vs, ps);
 
+	// アプリで利用する3Dモデル
+	// 被写体の準備
+	Model* model = Model::CreateFromOBJ("terrain");
+
+	WorldTransformEx worldTransform;
+	worldTransform.Initialize();
+	worldTransform.scale_ = Vector3(1.0f, 1.0f, 1.0f);
+
+	// カメラの準備
+	Camera camera;
+	camera.Initialize();
+	camera.translation_ = Vector3(1.0f, 1.0f, 1.0f);
+
+
 	//リソースの確保含む
 	//Vertex4 => VertexData に変更して利用する
 	struct VertexData 
@@ -333,6 +348,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		}
 
 		//描画(次回の00_10でやる)
+		//world変換行列の定数バッファへの転送
+		worldTransform.rotation_.y += 0.005f; //適当な回転角度(ラジアン)
+		worldTransform.UpdateMatrix();
+
+		//cameraの更新と定数バッファへの転送
+		camera.UpdateMatrix();
+
 
 		//TranssitionBarrierをSRV->RTVに設定する
 		D3D12_RESOURCE_BARRIER barrier{};
@@ -371,6 +393,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//指定した深度で画面全体をクリアする
 		commandList->ClearDepthStencilView(dsvHandleCPU, D3D12_CLEAR_FLAG_DEPTH,1.0f,0,0,nullptr);
 
+		// モデル描画
+		Model::PreDraw();
+		model->Draw(worldTransform, camera);
+		Model::PostDraw();
+
 
 		// 描画開始
 		dxCommon->PreDraw();
@@ -398,6 +425,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	}
 
 	//解放
+	delete model;
+
 	renderTextureResource->Release();
 	srvDescriptorHeap->Release();
 	rtvDescriptorHeap->Release();
